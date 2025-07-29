@@ -1,0 +1,27 @@
+# Dependency directories
+node_modules/
+dist/
+build/
+.vite/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Editor folders
+.vscode/
+.idea/
+.DS_Store
+
+# Custom confidential folders
+secrets/
+config/private/
