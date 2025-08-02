@@ -1,5 +1,7 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { googleLogout } from '@react-oauth/google';
 
 import { 
   Home, 
@@ -13,19 +15,41 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
+import { useState, useRef, useEffect } from 'react';
+
 export const Navbar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, setUser } = useAuth();
   const { 
     isDarkMode, 
     toggleDarkMode
   } = useStore();
-  
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown if clicking outside
+  useEffect(() => {
+    function handleClick(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClick);
+    } else {
+      document.removeEventListener('mousedown', handleClick);
+    }
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [dropdownOpen]);
+
   const navigationItems = [
     { path: '/', icon: Home, label: 'Home' },
     { path: '/ai-assistant', icon: MessageCircle, label: 'AI Assistant' },
     { path: '/try-on', icon: Camera, label: 'Try-On' },
     { path: '/visual-search', icon: Eye, label: 'Visual Search' },
     { path: '/social', icon: Users, label: 'Social' },
+    { path: '/news', icon: MessageCircle, label: 'Fashion News' },
   ];
 
   return (
@@ -104,6 +128,52 @@ export const Navbar: React.FC = () => {
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
+            {/* Login/Avatar Dropdown */}
+            {!user ? (
+              <button
+                onClick={() => navigate('/login')}
+                className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-semibold transition shadow"
+              >
+                Login
+              </button>
+            ) : (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  className="flex items-center focus:outline-none"
+                  onClick={() => setDropdownOpen((open) => !open)}
+                  aria-label="User menu"
+                >
+                  <img src={user.picture} alt="Profile" className="w-8 h-8 rounded-full border-2 border-primary-400" />
+                </button>
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+                    <div className="px-4 py-2 text-center text-gray-800 dark:text-gray-200 border-b dark:border-gray-700">
+                      <span className="font-semibold">{user.name}</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        googleLogout();
+                        setUser(null);
+                        setDropdownOpen(false);
+                        navigate('/');
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-red-100 dark:hover:bg-red-900 text-red-600 dark:text-red-400 transition"
+                    >
+                      Logout
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        navigate('/');
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-primary-100 dark:hover:bg-primary-900 text-primary-700 dark:text-primary-300 transition"
+                    >
+                      Return Home
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

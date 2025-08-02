@@ -3,24 +3,44 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from schemas import ChatRequest, ChatResponse, TryOnResponse
 from assistant import get_ai_response
-from tryon import tryon_with_lightx
 from fastapi import FastAPI, UploadFile, File, Form, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
+from routes.auth import router as auth_router
 from visualsearch import router as visualsearch_router
 from routes.visual_search import router as flipkart_router
+from routes.tryon_route import router as tryon_router
+from feeds.router import router as feeds_router
 
 app = FastAPI()
+
+# Add CORS middleware first
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
 app.include_router(visualsearch_router)
 app.include_router(flipkart_router)
+app.include_router(auth_router, prefix="/api")
+app.include_router(tryon_router)
+
+# Include feeds router with proper prefix
+app.include_router(feeds_router, prefix="/api/feeds", tags=["feeds"])
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -35,30 +55,7 @@ import requests
 
 # @app.post("/api/tryon")
 # Deprecated: All try-on and AI endpoints removed. Only frontend MediaPipe overlays are used.
-@app.post("/api/tryon")
-async def tryon(
-    user_image: UploadFile = File(...),
-    garment_image: UploadFile = File(None),
-    clothing_prompt: str = Form(None)
-):
-    try:
-        user_bytes = await user_image.read()
-        garment_bytes = await garment_image.read() if garment_image else None
-        garment_filename = garment_image.filename if garment_image else None
 
-        if not garment_bytes and not clothing_prompt:
-            return JSONResponse(status_code=400, content={"error": "Provide either a clothing image or a clothing prompt."})
-
-        result_url = await tryon_with_lightx(
-            user_bytes,
-            user_image.filename,
-            garment_bytes,
-            garment_filename,
-            clothing_prompt
-        )
-        return {"image_url": result_url}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
 
 # @app.post("/api/generate-clothing/")
 # Deprecated: All try-on and AI endpoints removed. Only frontend MediaPipe overlays are used.

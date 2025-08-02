@@ -25,3 +25,17 @@ pnpm-debug.log*
 # Custom confidential folders
 secrets/
 config/private/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Python
+__pycache__/
+*.pyc
+.env
+
+# OS
+.DS_Store
+

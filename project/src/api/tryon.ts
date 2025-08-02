@@ -1,14 +1,10 @@
-export async function tryOnWithLightX({ userPhoto, clothingImg, prompt }: { userPhoto: File, clothingImg?: File | null, prompt?: string }) {
-  const formData = new FormData();
-  formData.append("user", userPhoto);
-  if (clothingImg) formData.append("clothing", clothingImg);
-  if (prompt) formData.append("prompt", prompt);
-
+export async function tryOnWithReplicate({ userImageUrl, clothImageUrl }: { userImageUrl: string, clothImageUrl: string }) {
   const res = await fetch("http://localhost:8000/api/tryon", {
     method: "POST",
-    body: formData,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_image_url: userImageUrl, cloth_image_url: clothImageUrl })
   });
-  if (!res.ok) throw new Error("LightX API failed");
+  if (!res.ok) throw new Error("Replicate API failed");
   const data = await res.json();
-  return data.image_url;
+  return data.result_url;
 }
